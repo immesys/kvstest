@@ -125,8 +125,11 @@ class MongoProvider(object):
 class KyotoFileProvider(object):
     def __init__(self):
         global kyoto
-        kyoto = __include__("kyotocabinet")
-        self.db = kyoto.open("test.kch",kyoto.DB.OTRUNCATE)
+        kyoto = __import__("kyotocabinet")
+        self.db = kyoto.DB()
+        assert self.db.open("test.kch")
+        self.db.clear()
+
     def key(self):
         return str(uuid.uuid1())
 
@@ -166,6 +169,8 @@ if __name__ == "__main__":
             provider = RedisSockPMarshallProvider()
     if sys.argv[1] == "redis_sock_json":
             provider = RedisSockJSONProvider()
+    if sys.argv[1] == "kyoto":
+            provider = KyotoFileProvider()
     if len (sys.argv) == 3:
             scale = float(sys.argv[2])
     if provider == None:
