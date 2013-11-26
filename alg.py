@@ -1,3 +1,4 @@
+import sys
 import time
 import random
 import uuid
@@ -8,7 +9,7 @@ def run_test(provider, scale):
         "prop1":450,
         "prop2":500.5,
         "prop3":"aval",
-        "children":[provider.key() for k in 128]
+        "children":[provider.key() for k in xrange(128)]
         }
 
     #Test a single object insert
@@ -36,12 +37,14 @@ class MongoProvider(object):
     def __init__(self):
         global pymongo
         pymongo = __import__("pymongo")
-        self.db = pymongo.MongoClient()
+        self.con = pymongo.MongoClient()
+        self.db = self.con.db
+        self.db.drop_collection("col")
         self.col = self.db.col
         self.col.ensure_index("key")
 
     def key(self):
-        return int(uuid.uuid1())
+        return str(uuid.uuid1())
 
     def insert(self, k, v):
         self.col.save(v)
@@ -52,9 +55,11 @@ class MongoProvider(object):
 if __name__ == "__main__":
     provider = None
     scale = 1.0
-    if sys.argv[0] == "mongo":
+    if sys.argv[1] == "mongo":
             provider = MongoProvider()
-    if len (sys.argv) == 2:
-            scale = float(sys.argv[1])
-            
+    if len (sys.argv) == 3:
+            scale = float(sys.argv[2])
+    if provider == None:
+	print "You need a provider"
+	sys.exit(1)        
     run_test(provider, scale)
