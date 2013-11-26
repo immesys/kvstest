@@ -154,11 +154,28 @@ class LevelProvider(object):
     def get(self, k):
         return marshal.loads(self.db.Get(k))
 
+class BDBProvider(object):
+    def __init__(self):
+        global bdb
+        bdb = __import__("bsddb")
+        self.db = bdb.hashopen("bdb.db","c")
+
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.db[k] = marshal.dumps(v)
+
+    def get(self, k):
+        return marshal.loads(self.db[k])
+
 if __name__ == "__main__":
     provider = None
     scale = 1.0
     if sys.argv[1] == "mongo":
             provider = MongoProvider()
+    if sys.argv[1] == "bdb":
+            provider = BDBProvider()
     if sys.argv[1] == "level":
             provider = LevelProvider()
     if sys.argv[1] == "redis_tcp_json":
