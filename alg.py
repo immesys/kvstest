@@ -35,6 +35,24 @@ def run_test(provider, scale):
     print "Located records in %.3f seconds" % (now - then,)
 
 
+class RedisSockJSONProvider(object):
+    def __init__(self):
+        global redis
+        global ujson
+        ujson = __import__("ujson")
+        redis = __import__("redis")
+        self.con = redis.StrictRedis(unix_socket_path='/tmp/redis.sock')
+        self.con.flushall()
+
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.con.set(k, ujson.dumps(v))
+
+    def get(self, k):
+        return ujson.loads(self.con.get(k))
+
 class RedisTCPJSONProvider(object):
     def __init__(self):
         global redis
@@ -123,6 +141,14 @@ if __name__ == "__main__":
     scale = 1.0
     if sys.argv[1] == "mongo":
             provider = MongoProvider()
+    if sys.argv[1] == "redis_tcp_json":
+            provider = RedisTCPJSONProvider()
+    if sys.argv[1] == "redis_tcp_marshal":
+            provider = RedisTCPMarshallProvider()
+    if sys.argv[1] == "redis_sock":
+            provider = RedisSockPMarshallProvider()
+    if sys.argv[1] == "redis_sock_json":
+            provider = RedisSockJSONProvider()
     if len (sys.argv) == 3:
             scale = float(sys.argv[2])
     if provider == None:
