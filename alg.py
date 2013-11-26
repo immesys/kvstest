@@ -2,6 +2,8 @@ import sys
 import time
 import random
 import uuid
+import json
+import marshal
 
 def run_test(provider, scale):
     doc = {
@@ -32,6 +34,56 @@ def run_test(provider, scale):
     now = time.time()
     print "Located records in %.3f seconds" % (now - then,)
 
+
+class RedisTCPJSONProvider(object):
+    def __init__(self):
+        global redis
+        global ujson
+        ujson = __import__("ujson")
+        redis = __import__("redis")
+        self.con = redis.StrictRedis(host='localhost', port=6379, db=0)
+        self.con.flushall()
+
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.con.set(k, ujson.dumps(v))
+
+    def get(self, k):
+        return ujson.loads(self.con.get(k))
+
+class RedisTCPMarshallProvider(object):
+    def __init__(self):
+        global redis
+        redis = __import__("redis")
+        self.con = redis.StrictRedis(host='localhost', port=6379, db=0)
+        self.con.flushall()
+
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.con.set(k, marshal.dumps(v))
+
+    def get(self, k):
+        return marshal.loads(self.con.get(k))
+
+class RedisSockPMarshallProvider(object):
+    def __init__(self):
+        global redis
+        redis = __import__("redis")
+        self.con = redis.StrictRedis(unix_socket_path='/tmp/redis.sock')
+        self.con.flushall()
+
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.con.set(k, marshal.dumps(v))
+
+    def get(self, k):
+        return marshal.loads(self.con.get(k))
 
 class MongoProvider(object):
     def __init__(self):
