@@ -135,12 +135,29 @@ class KyotoFileProvider(object):
 
     def get(self, k):
         return marshal.loads(self.db.get(k))
-        
+
+class LevelProvider(object):
+    def __init__(self):
+        global level
+        level = __import__("leveldb")
+        self.db = level.LevelDb("./level.db")
+
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.db.Put(k, marshal.dumps(v))
+
+    def get(self, k):
+        return marshal.loads(self.db.Get(k))
+
 if __name__ == "__main__":
     provider = None
     scale = 1.0
     if sys.argv[1] == "mongo":
             provider = MongoProvider()
+    if sys.argv[1] == "level":
+            provider = LevelProvider()
     if sys.argv[1] == "redis_tcp_json":
             provider = RedisTCPJSONProvider()
     if sys.argv[1] == "redis_tcp_marshal":
