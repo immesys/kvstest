@@ -104,6 +104,20 @@ class MongoProvider(object):
     def get(self, k):
         return self.col.find_one({"key":k}) 
 
+class KyotoFileProvider(object):
+    def __init__(self):
+        global kyoto
+        kyoto = __include__("kyotocabinet")
+        self.db = kyoto.open("test.kch",kyoto.DB.OTRUNCATE)
+    def key(self):
+        return str(uuid.uuid1())
+
+    def insert(self, k, v):
+        self.db.set(k, marshal.dumps(v))
+
+    def get(self, k):
+        return marshal.loads(self.db.get(k))
+        
 if __name__ == "__main__":
     provider = None
     scale = 1.0
