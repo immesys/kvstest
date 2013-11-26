@@ -143,7 +143,7 @@ class LevelProvider(object):
     def __init__(self):
         global level
         level = __import__("leveldb")
-        self.db = level.LevelDb("./level.db")
+        self.db = level.LevelDB("./level.db")
 
     def key(self):
         return str(uuid.uuid1())
